@@ -2,32 +2,11 @@ package netflowreceiver
 
 import (
 	"encoding/json"
-	"fmt"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"time"
 )
-
-type ConsoleTransport struct {
-}
-
-func (c *ConsoleTransport) Prepare() error {
-	return nil
-}
-
-func (c *ConsoleTransport) Init() error {
-	return nil
-}
-
-func (c *ConsoleTransport) Close() error {
-	return nil
-}
-
-func (c *ConsoleTransport) Send(key, data []byte) error {
-	fmt.Println(string(data))
-	return nil
-}
 
 type LogConsumerTransport struct {
 	logConsumer consumer.Logs

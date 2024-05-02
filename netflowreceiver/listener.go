@@ -26,7 +26,7 @@ func newDroppedCallback() *droppedCallback {
 	return &droppedCallback{}
 }
 func (r *droppedCallback) Dropped(pkt utils.Message) {
-
+	// TODO - Implement
 }
 
 func NewListener(config ListenerConfig, logger *zap.Logger, transport transport.TransportDriver) *Listener {
