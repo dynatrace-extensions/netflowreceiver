@@ -1,0 +1,35 @@
+receivers:
+  netflow:
+    listeners:
+      - scheme: netflow
+        port: 2055
+        sockets: 1
+        workers: 4
+
+      - scheme: sflow
+        port: 6443
+        sockets: 1
+        workers: 2
+        queueSize: 1000
+
+processors:
+  batch:
+
+exporters:
+  # NOTE: Prior to v0.86.0 use `logging` instead of `debug`.
+  debug:
+    verbosity: detailed
+  otlphttp/dynatrace:
+    endpoint: https://lwp00649.dev.dynatracelabs.com/api/v2/otlp
+    headers:
+      Authorization: "Api-Token <TOKEN>"
+
+service:
+  pipelines:
+    logs:
+      receivers: [netflow]
+      processors: [batch]
+      exporters: [debug, otlphttp/dynatrace]
+  telemetry:
+    logs:
+      level: debug
