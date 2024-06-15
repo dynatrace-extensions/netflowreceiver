@@ -21,8 +21,11 @@ func (nr *netflowReceiver) Start(ctx context.Context, host component.Host) error
 	ctx = context.Background()
 	ctx, nr.cancel = context.WithCancel(ctx)
 
+	// The receiver configuration is composed of a list of listeners
+	// Each listener process a specific flow protocol (NetFlow v5, NetFlow v9, IPFIX, sFlow)
+	// and listens on a specific address and UDP port
 	for _, listenerConfig := range nr.config.Listeners {
-		listener := NewListener(listenerConfig, nr.logger, &LogConsumerTransport{logConsumer: nr.logConsumer})
+		listener := NewListener(listenerConfig, nr.logger, nr.logConsumer)
 		if err := listener.Start(); err != nil {
 			return err
 		}

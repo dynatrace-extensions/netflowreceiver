@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"github.com/netsampler/goflow2/v2/decoders/netflow"
 	protoproducer "github.com/netsampler/goflow2/v2/producer/proto"
-	"github.com/netsampler/goflow2/v2/transport"
 	"github.com/netsampler/goflow2/v2/utils"
 	"github.com/netsampler/goflow2/v2/utils/debug"
+	"go.opentelemetry.io/collector/consumer"
 	"go.uber.org/zap"
 	"net"
 )
 
 type Listener struct {
-	config    ListenerConfig
-	logger    *zap.Logger
-	transport transport.TransportDriver
-	recv      *utils.UDPReceiver
+	config      ListenerConfig
+	logger      *zap.Logger
+	recv        *utils.UDPReceiver
+	logConsumer consumer.Logs
 }
 
 type droppedCallback struct {
@@ -29,13 +29,13 @@ func (r *droppedCallback) Dropped(pkt utils.Message) {
 	// TODO - Implement
 }
 
-func NewListener(config ListenerConfig, logger *zap.Logger, transport transport.TransportDriver) *Listener {
-	return &Listener{config: config, logger: logger, transport: transport}
+func NewListener(config ListenerConfig, logger *zap.Logger, logConsumer consumer.Logs) *Listener {
+	return &Listener{config: config, logger: logger, logConsumer: logConsumer}
 }
 
+// Start starts the listener, it will start listening for NetFlow packets
+// on a UDP socket and decode them according to the specific protocol
 func (l *Listener) Start() error {
-	//var receivers []*utils.UDPReceiver
-	//var pipes []utils.FlowPipe
 
 	l.logger.Info("Setting up receivers for listener", zap.Any("config", l.config))
 
@@ -68,15 +68,18 @@ func (l *Listener) Start() error {
 }
 
 func (l *Listener) buildDecodeFunc() (utils.DecoderFunc, error) {
-	flowProducer, err := protoproducer.CreateProtoProducer(nil, protoproducer.CreateSamplingSystem)
+
+	// We used a goflow2 proto producer to produce messages using protobuf format
+	protoProducer, err := protoproducer.CreateProtoProducer(nil, protoproducer.CreateSamplingSystem)
 	if err != nil {
 		return nil, err
 	}
 
+	// the otel log producer converts those messages into OpenTelemetry logs
+	otelLogsProducer := NewOtelLogsProducer(protoProducer, l.logConsumer)
+
 	cfgPipe := &utils.PipeConfig{
-		Format:    &JsonFormat{},
-		Transport: l.transport,
-		Producer:  flowProducer,
+		Producer: otelLogsProducer,
 	}
 
 	var decodeFunc utils.DecoderFunc
