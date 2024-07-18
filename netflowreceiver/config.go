@@ -8,12 +8,28 @@ type Config struct {
 }
 
 type ListenerConfig struct {
-	Scheme    string `mapstructure:"scheme"`
-	Hostname  string `mapstructure:"hostname"`
-	Port      int    `mapstructure:"port"`
-	Sockets   int    `mapstructure:"sockets"`
-	Workers   int    `mapstructure:"workers"`
-	QueueSize int    `mapstructure:"queueSize"`
+
+	// The scheme defines the type of flow data that the listener will receive
+	// The scheme must be one of sflow, netflow, or flow
+	Scheme string `mapstructure:"scheme"`
+
+	// The hostname or IP address that the listener will bind to
+	Hostname string `mapstructure:"hostname"`
+
+	// The port that the listener will bind to
+	Port int `mapstructure:"port"`
+
+	// The number of sockets that the listener will use
+	Sockets int `mapstructure:"sockets"`
+
+	// The number of workers that the listener will use to decode incoming flow messages
+	// By default it will be two times the number of sockets
+	// Ideally set this to the number of CPU cores
+	Workers int `mapstructure:"workers"`
+
+	// The size of the queue that the listener will use
+	// This is a buffer that will hold flow messages before they are processed by a worker
+	QueueSize int `mapstructure:"queueSize"`
 }
 
 // Validate checks if the receiver configuration is valid

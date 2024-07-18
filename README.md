@@ -18,3 +18,8 @@ The receiver code is under `netflowreceiver`.
 The folder `otelcol-dev` contains a generated collector built via the `builder-config.yaml` file using [ocb](https://opentelemetry.io/docs/collector/custom-collector/).
 
 There is an example `config.yaml` file used to run the collector with `--config config.yaml`
+
+
+## Scaling
+
+https://opentelemetry.io/docs/collector/scaling/

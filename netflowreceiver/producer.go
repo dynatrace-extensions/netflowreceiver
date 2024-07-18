@@ -10,11 +10,13 @@ import (
 	"time"
 )
 
+// OtelLogsProducerWrapper is a wrapper around a producer.ProducerInterface that sends the messages to a log consumer
 type OtelLogsProducerWrapper struct {
 	wrapped     producer.ProducerInterface
 	logConsumer consumer.Logs
 }
 
+// Produce converts the message into a list log records and sends them to log consumer
 func (o *OtelLogsProducerWrapper) Produce(msg interface{}, args *producer.ProduceArgs) ([]producer.ProducerMessage, error) {
 	flowMessageSet, err := o.wrapped.Produce(msg, args)
 	if err != nil {
@@ -25,8 +27,8 @@ func (o *OtelLogsProducerWrapper) Produce(msg interface{}, args *producer.Produc
 	resourceLog := log.ResourceLogs().AppendEmpty()
 	resourceLog.Resource().Attributes().PutStr("key", "netflow")
 	scopeLog := resourceLog.ScopeLogs().AppendEmpty()
-	scopeLog.Scope().SetName("netflow")
-	scopeLog.Scope().SetVersion("2.0.0")
+	scopeLog.Scope().SetName("netflow-receiver")
+	scopeLog.Scope().SetVersion("1.0.0")
 
 	for _, msg := range flowMessageSet {
 		// we know msg is ProtoProducerMessage
@@ -55,7 +57,6 @@ func (o *OtelLogsProducerWrapper) Produce(msg interface{}, args *producer.Produc
 		if err != nil {
 			continue
 		}
-		m["content"] = string(jsonFormatted)
 		err = logRecord.Body().SetEmptyMap().FromRaw(m)
 		if err != nil {
 			continue
