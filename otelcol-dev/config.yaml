@@ -1,17 +1,9 @@
 receivers:
   netflow:
-    listeners:
-      - scheme: netflow
-        port: 2055
-        sockets: 1
-        workers: 4
-
-      - scheme: sflow
-        port: 6443
-        sockets: 1
-        workers: 2
-        queueSize: 1000
-
+      scheme: netflow
+      port: 2055
+      sockets: 1
+      workers: 4
 processors:
   batch:
 
