@@ -1,13 +1,15 @@
 package netflowreceiver
 
 import (
+	"context"
 	"encoding/json"
+	"time"
+
 	"github.com/netsampler/goflow2/v2/producer"
 	protoproducer "github.com/netsampler/goflow2/v2/producer/proto"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
-	"time"
 )
 
 // OtelLogsProducerWrapper is a wrapper around a producer.ProducerInterface that sends the messages to a log consumer
@@ -63,7 +65,7 @@ func (o *OtelLogsProducerWrapper) Produce(msg interface{}, args *producer.Produc
 		}
 	}
 
-	err = o.logConsumer.ConsumeLogs(nil, log)
+	err = o.logConsumer.ConsumeLogs(context.TODO(), log)
 	if err != nil {
 		return flowMessageSet, err
 	}

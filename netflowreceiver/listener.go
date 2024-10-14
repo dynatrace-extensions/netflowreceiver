@@ -3,17 +3,18 @@ package netflowreceiver
 import (
 	"errors"
 	"fmt"
+	"net"
+
 	"github.com/netsampler/goflow2/v2/decoders/netflow"
 	protoproducer "github.com/netsampler/goflow2/v2/producer/proto"
 	"github.com/netsampler/goflow2/v2/utils"
 	"github.com/netsampler/goflow2/v2/utils/debug"
 	"go.opentelemetry.io/collector/consumer"
 	"go.uber.org/zap"
-	"net"
 )
 
 type Listener struct {
-	config      ListenerConfig
+	config      Config
 	logger      *zap.Logger
 	recv        *utils.UDPReceiver
 	logConsumer consumer.Logs
@@ -29,7 +30,7 @@ func (r *droppedCallback) Dropped(pkt utils.Message) {
 	// TODO - Implement
 }
 
-func NewListener(config ListenerConfig, logger *zap.Logger, logConsumer consumer.Logs) *Listener {
+func NewListener(config Config, logger *zap.Logger, logConsumer consumer.Logs) *Listener {
 	return &Listener{config: config, logger: logger, logConsumer: logConsumer}
 }
 

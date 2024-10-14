@@ -4,11 +4,6 @@ import "fmt"
 
 // Config represents the receiver config settings within the collector's config.yaml
 type Config struct {
-	Listeners []ListenerConfig `mapstructure:"listeners"`
-}
-
-type ListenerConfig struct {
-
 	// The scheme defines the type of flow data that the listener will receive
 	// The scheme must be one of sflow, netflow, or flow
 	Scheme string `mapstructure:"scheme"`
@@ -29,41 +24,38 @@ type ListenerConfig struct {
 
 	// The size of the queue that the listener will use
 	// This is a buffer that will hold flow messages before they are processed by a worker
-	QueueSize int `mapstructure:"queueSize"`
+	QueueSize int `mapstructure:"queue_size"`
 }
 
 // Validate checks if the receiver configuration is valid
 func (cfg *Config) Validate() error {
 	validSchemes := [3]string{"sflow", "netflow", "flow"}
 
-	for _, listener := range cfg.Listeners {
+	validScheme := false
+	for _, scheme := range validSchemes {
+		if cfg.Scheme == scheme {
+			validScheme = true
+			break
+		}
+	}
+	if !validScheme {
+		return fmt.Errorf("scheme must be one of sflow, netflow, or flow")
+	}
 
-		validScheme := false
-		for _, scheme := range validSchemes {
-			if listener.Scheme == scheme {
-				validScheme = true
-				break
-			}
-		}
-		if !validScheme {
-			return fmt.Errorf("scheme must be one of sflow, netflow, or flow")
-		}
+	if cfg.Sockets <= 0 {
+		return fmt.Errorf("sockets must be greater than 0")
+	}
 
-		if listener.Sockets <= 0 {
-			return fmt.Errorf("sockets must be greater than 0")
-		}
+	if cfg.Workers <= 0 {
+		return fmt.Errorf("workers must be greater than 0")
+	}
 
-		if listener.Workers <= 0 {
-			return fmt.Errorf("workers must be greater than 0")
-		}
+	if cfg.QueueSize <= 0 {
+		cfg.QueueSize = defaultQueueSize
+	}
 
-		if listener.QueueSize <= 0 {
-			listener.QueueSize = defaultQueueSize
-		}
-
-		if listener.Port <= 0 {
-			return fmt.Errorf("port must be greater than 0")
-		}
+	if cfg.Port <= 0 {
+		return fmt.Errorf("port must be greater than 0")
 	}
 
 	return nil
