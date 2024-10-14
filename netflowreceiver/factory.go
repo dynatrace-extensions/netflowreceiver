@@ -27,7 +27,7 @@ func NewFactory() receiver.Factory {
 }
 
 func createDefaultConfig() component.Config {
-	return Config{
+	return &Config{
 		Scheme:    "netflow",
 		Port:      2055,
 		Sockets:   defaultSockets,
@@ -38,7 +38,7 @@ func createDefaultConfig() component.Config {
 
 func createLogsReceiver(_ context.Context, params receiver.CreateSettings, cfg component.Config, consumer consumer.Logs) (receiver.Logs, error) {
 	logger := params.Logger
-	conf := cfg.(Config)
+	conf := cfg.(*Config)
 
 	nr := &netflowReceiver{
 		logger:      logger,

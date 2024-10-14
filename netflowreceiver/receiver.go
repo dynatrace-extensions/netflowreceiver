@@ -11,7 +11,7 @@ import (
 type netflowReceiver struct {
 	host        component.Host
 	cancel      context.CancelFunc
-	config      Config
+	config      *Config
 	logConsumer consumer.Logs
 	logger      *zap.Logger
 	listener    *Listener
@@ -22,7 +22,7 @@ func (nr *netflowReceiver) Start(ctx context.Context, host component.Host) error
 	ctx = context.Background()
 	ctx, nr.cancel = context.WithCancel(ctx)
 
-	listener := NewListener(nr.config, nr.logger, nr.logConsumer)
+	listener := NewListener(*nr.config, nr.logger, nr.logConsumer)
 	if err := listener.Start(); err != nil {
 		return err
 	}
