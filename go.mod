@@ -37,6 +37,4 @@ require (
 	google.golang.org/protobuf v1.33.0 // indirect
 )
 
-retract (
-    v1.0.0 // Published accidentally.
-)
+retract v1.0.0 // Published accidentally.

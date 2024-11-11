@@ -17,7 +17,30 @@ The receiver listens for flows and decodes them using the templates that are sen
 
 ```yaml
 receivers:
-  - gomod: github.com/dynatrace-extensions/netflowreceiver v0.2.0
+  - gomod: github.com/dynatrace-extensions/netflowreceiver v1.2.0
+```
+
+Example `builder-config.yaml`:
+
+```yaml
+dist:
+  name: otelcol-dev
+  description: Basic OTel Collector distribution for Developers
+  output_path: ./otelcol-dev
+
+exporters:
+  - gomod:
+      go.opentelemetry.io/collector/exporter/debugexporter v0.99.0
+  - gomod:
+      go.opentelemetry.io/collector/exporter/otlphttpexporter v0.99.0
+
+processors:
+  - gomod:
+      go.opentelemetry.io/collector/processor/batchprocessor v0.99.0
+
+receivers:
+  - gomod: github.com/dynatrace-extensions/netflowreceiver v1.2.0
+    path: .
 ```
 
 ## Project structure
