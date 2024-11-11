@@ -11,6 +11,15 @@ This gives Opentelemetry users the capability of monitoring network traffic, and
 
 The receiver listens for flows and decodes them using the templates that are sent by the flow producers. The data then is converted to JSON and produces structured log records.
 
+## Using the receiver
+
+[Build a collector](https://opentelemetry.io/docs/collector/custom-collector/) with the receiver by using:
+
+```yaml
+receivers:
+  - gomod: github.com/dynatrace-extensions/netflowreceiver v0.2.0
+```
+
 ## Project structure
 
 The receiver code is under `netflowreceiver`.
@@ -23,3 +32,4 @@ There is an example `config.yaml` file used to run the collector with `--config 
 ## Scaling
 
 https://opentelemetry.io/docs/collector/scaling/
+

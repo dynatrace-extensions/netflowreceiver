@@ -1,4 +1,4 @@
-package netflowreceiver
+package otel_netflow_receiver
 
 import "fmt"
 
