@@ -60,6 +60,11 @@ service:
 ```
 
 Will start a collector listening on the port 2055 UDP of the host for netflow data.
+You can send demo netflow data to that container with:
+
+```bash
+docker run --net="host" dlopes7/netflow-generator -r 10 -t localhost -p 2055
+```
 
 ### Building a collector
 
