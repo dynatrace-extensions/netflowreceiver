@@ -1,6 +1,6 @@
 receivers:
   netflow:
-    hostname: "172.28.190.101"
+    hostname: "0.0.0.0"
     scheme: netflow
     port: 2055
     sockets: 16
@@ -13,9 +13,8 @@ processors:
 
 exporters:
   debug:
-    verbosity: detailed
   otlphttp:
-    endpoint: https://lwp00649.dev.dynatracelabs.com/api/v2/otlp
+    endpoint: https://<environment>.live.dynatrace.com/api/v2/otlp
     headers: 
       Authorization: "Api-Token <dynatrace_token>"
 
@@ -24,7 +23,7 @@ service:
     logs:
       receivers: [netflow]
       processors: [batch]
-      exporters: [otlphttp]
+      exporters: [debug, otlphttp]
   telemetry:
     logs:
       level: debug

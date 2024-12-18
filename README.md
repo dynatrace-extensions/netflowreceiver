@@ -13,6 +13,57 @@ The receiver listens for flows and decodes them using the templates that are sen
 
 ## Using the receiver
 
+### Docker
+
+A collector with the receiver can be run with docker:
+
+```bash
+# windows
+docker run --name otelcol -v ${PWD}/config.yaml:/etc/otel/config.yaml -p 2055:2055/udp dlopes7/otelcol-netflow-receiver
+
+# linux
+docker run --name otelcol -v $(pwd)/config.yaml:/etc/otel/config.yaml -p 2055:2055/udp dlopes7/otelcol-netflow-receiver
+```
+
+This repo contains an example of a `config.yaml`:
+
+```yaml
+receivers:
+  netflow:
+    hostname: "0.0.0.0"
+    scheme: netflow
+    port: 2055
+    sockets: 16
+    workers: 32
+
+processors:
+  batch:
+    send_batch_size: 30 
+    timeout: 30s
+
+exporters:
+  debug:
+  otlphttp:
+    endpoint: https://<environment>.live.dynatrace.com/api/v2/otlp
+    headers: 
+      Authorization: "Api-Token <dynatrace_ingest_logs_token>"
+
+service:
+  pipelines:
+    logs:
+      receivers: [netflow]
+      processors: [batch]
+      exporters: [debug, otlphttp]
+  telemetry:
+    logs:
+      level: debug
+```
+
+Will start a collector listening on the port 2055 UDP of the host for netflow data.
+
+### Building a collector
+
+
 [Build a collector](https://opentelemetry.io/docs/collector/custom-collector/) with the receiver by using:
 
 Example `builder-config.yaml`:
