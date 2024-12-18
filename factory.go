@@ -1,3 +1,6 @@
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
 package otel_netflow_receiver
 
 import (
@@ -6,10 +9,8 @@ import (
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/receiver"
-)
 
-var (
-	typeStr = component.MustNewType("netflow")
+	"github.com/dynatrace-extensions/netflowreceiver/internal/metadata"
 )
 
 const (
@@ -21,11 +22,13 @@ const (
 // NewFactory creates a factory for netflow receiver.
 func NewFactory() receiver.Factory {
 	return receiver.NewFactory(
-		typeStr,
+		metadata.Type,
 		createDefaultConfig,
-		receiver.WithLogs(createLogsReceiver, component.StabilityLevelAlpha))
+		receiver.WithLogs(createLogsReceiver, metadata.LogsStability))
 }
 
+// Config defines configuration for netflow receiver.
+// By default we listen for netflow traffic on port 2055
 func createDefaultConfig() component.Config {
 	return &Config{
 		Scheme:    "netflow",
@@ -36,14 +39,15 @@ func createDefaultConfig() component.Config {
 	}
 }
 
-func createLogsReceiver(_ context.Context, params receiver.CreateSettings, cfg component.Config, consumer consumer.Logs) (receiver.Logs, error) {
-	logger := params.Logger
-	conf := cfg.(*Config)
+// createLogsReceiver creates a netflow receiver.
+// We also create the UDP receiver, which is the piece of software that actually listens
+// for incoming netflow traffic on an UDP port.
+func createLogsReceiver(_ context.Context, params receiver.Settings, cfg component.Config, consumer consumer.Logs) (receiver.Logs, error) {
+	conf := *(cfg.(*Config))
 
-	nr := &netflowReceiver{
-		logger:      logger,
-		logConsumer: consumer,
-		config:      conf,
+	nr, err := newNetflowLogsReceiver(params, conf, consumer)
+	if err != nil {
+		return nil, err
 	}
 
 	return nr, nil

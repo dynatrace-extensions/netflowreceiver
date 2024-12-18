@@ -21,3 +21,5 @@ go.work
 
 # Contains a token
 config.real.yaml
+
+otelcol-dev/

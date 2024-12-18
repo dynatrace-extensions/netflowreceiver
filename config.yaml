@@ -1,0 +1,30 @@
+receivers:
+  netflow:
+    hostname: "172.28.190.101"
+    scheme: netflow
+    port: 2055
+    sockets: 16
+    workers: 32
+
+processors:
+  batch:
+    send_batch_size: 30 
+    timeout: 30s
+
+exporters:
+  debug:
+    verbosity: detailed
+  otlphttp:
+    endpoint: https://lwp00649.dev.dynatracelabs.com/api/v2/otlp
+    headers: 
+      Authorization: "Api-Token <dynatrace_token>"
+
+service:
+  pipelines:
+    logs:
+      receivers: [netflow]
+      processors: [batch]
+      exporters: [otlphttp]
+  telemetry:
+    logs:
+      level: debug
