@@ -97,8 +97,7 @@ receivers:
 The collector can be built with:
 
 ```bash
-go get go.opentelemetry.io/collector/cmd/builder 
-go install go.opentelemetry.io/collector/cmd/builder
+go install go.opentelemetry.io/collector/cmd/builder@latest
 builder --config builder-config.yaml 
 ```
 
