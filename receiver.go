@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package otel_netflow_receiver
+package netflowreceiver // import "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/netflowreceiver"
 
 import (
 	"context"
@@ -19,11 +19,13 @@ import (
 	"go.uber.org/zap"
 )
 
+var _ utils.ReceiverCallback = (*dropHandler)(nil)
+
 type dropHandler struct {
 	logger *zap.Logger
 }
 
-func (d *dropHandler) Dropped(msg utils.Message) {
+func (d dropHandler) Dropped(msg utils.Message) {
 	d.logger.Warn("Dropped netflow message", zap.Any("msg", msg))
 }
 
@@ -60,7 +62,7 @@ func newNetflowLogsReceiver(params receiver.Settings, cfg Config, consumer consu
 	return nr, nil
 }
 
-func (nr *netflowReceiver) Start(ctx context.Context, host component.Host) error {
+func (nr *netflowReceiver) Start(_ context.Context, _ component.Host) error {
 	nr.logger.Info("NetFlow receiver is starting...")
 
 	// The function that will decode packets
@@ -69,7 +71,7 @@ func (nr *netflowReceiver) Start(ctx context.Context, host component.Host) error
 		return err
 	}
 
-	nr.logger.Info("Start listening for NetFlow on UDP", zap.Any("config", nr.config))
+	nr.logger.Info("Start listening over UDP", zap.String("scheme", nr.config.Scheme), zap.Int("port", nr.config.Port))
 	if err := nr.udpReceiver.Start(nr.config.Hostname, nr.config.Port, decodeFunc); err != nil {
 		return err
 	}
@@ -110,7 +112,7 @@ func (nr *netflowReceiver) buildDecodeFunc() (utils.DecoderFunc, error) {
 
 	// the otel log producer converts those messages into OpenTelemetry logs
 	// it is a wrapper around the protobuf producer
-	otelLogsProducer := newOtelLogsProducer(protoProducer, nr.logConsumer)
+	otelLogsProducer := newOtelLogsProducer(protoProducer, nr.logConsumer, nr.logger)
 
 	cfgPipe := &utils.PipeConfig{
 		Producer: otelLogsProducer,
@@ -123,15 +125,13 @@ func (nr *netflowReceiver) buildDecodeFunc() (utils.DecoderFunc, error) {
 		p = utils.NewSFlowPipe(cfgPipe)
 	case "netflow":
 		p = utils.NewNetFlowPipe(cfgPipe)
-	case "flow":
-		p = utils.NewFlowPipe(cfgPipe)
 	default:
 		return nil, fmt.Errorf("scheme does not exist: %s", nr.config.Scheme)
 	}
 
 	decodeFunc = p.DecodeFlow
 
-	// We wrap panics while decoding the message to habndle them later
+	// We wrap panics while decoding the message to handle them later
 	decodeFunc = debug.PanicDecoderWrapper(decodeFunc)
 
 	return decodeFunc, nil
@@ -148,21 +148,20 @@ func (nr *netflowReceiver) handleErrors() {
 			return
 
 		case !errors.Is(err, netflow.ErrorTemplateNotFound) && !errors.Is(err, debug.PanicError):
-			nr.logger.Error("receiver error", zap.Error(err))
+			nr.logger.Error("received a generic error while processing a flow message via GoFlow2 for the netflow receiver", zap.Error(err))
 			continue
 
 		case errors.Is(err, netflow.ErrorTemplateNotFound):
-			nr.logger.Warn("template was not found for this message")
+			nr.logger.Warn("we could not find a template for a flow message, this error is expected from time to time until the device sends a template", zap.Error(err))
 			continue
 
 		case errors.Is(err, debug.PanicError):
 			var pErrMsg *debug.PanicErrorMessage
 			if errors.As(err, &pErrMsg) {
-				nr.logger.Error("panic error", zap.String("panic", pErrMsg.Inner))
-				nr.logger.Error("receiver stacktrace", zap.String("stack", string(pErrMsg.Stacktrace)))
-				nr.logger.Error("receiver msg", zap.Any("error", pErrMsg.Msg))
+				nr.logger.Error("unexpected error found decoding a flow message via GoFlow2 for the netflow receiver", zap.Any("error", pErrMsg.Msg))
+			} else {
+				nr.logger.Error("could not process a flow message, received an error from GoFlow2, this is a netflow receiver error", zap.Error(err))
 			}
-			nr.logger.Error("receiver panic", zap.Error(err))
 			continue
 		}
 	}

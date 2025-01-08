@@ -14,6 +14,5 @@ processors:
       go.opentelemetry.io/collector/processor/batchprocessor v0.116.0
 
 receivers:
-  - gomod: github.com/dynatrace-extensions/netflowreceiver v1.3.0
+  - gomod: github.com/dynatrace-extensions/netflowreceiver v1.116.0
     path: .
-

@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package otel_netflow_receiver
+package netflowreceiver
 
 import (
 	"context"
