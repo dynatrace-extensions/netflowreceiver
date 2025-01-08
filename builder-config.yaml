@@ -5,14 +5,14 @@ dist:
 
 exporters:
   - gomod:
-      go.opentelemetry.io/collector/exporter/debugexporter v0.116.0
+      go.opentelemetry.io/collector/exporter/debugexporter v0.117.0
   - gomod:
-      go.opentelemetry.io/collector/exporter/otlphttpexporter v0.116.0
+      go.opentelemetry.io/collector/exporter/otlphttpexporter v0.117.0
 
 processors:
   - gomod:
-      go.opentelemetry.io/collector/processor/batchprocessor v0.116.0
+      go.opentelemetry.io/collector/processor/batchprocessor v0.117.0
 
 receivers:
-  - gomod: github.com/dynatrace-extensions/netflowreceiver v1.116.0
+  - gomod: github.com/dynatrace-extensions/netflowreceiver v1.117.0
     path: .
