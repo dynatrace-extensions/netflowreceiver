@@ -12,7 +12,6 @@ import (
 	"github.com/netsampler/goflow2/v2/decoders/netflow"
 	protoproducer "github.com/netsampler/goflow2/v2/producer/proto"
 	"github.com/netsampler/goflow2/v2/utils"
-	"github.com/netsampler/goflow2/v2/utils/debug"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/receiver"
@@ -63,15 +62,13 @@ func newNetflowLogsReceiver(params receiver.Settings, cfg Config, consumer consu
 }
 
 func (nr *netflowReceiver) Start(_ context.Context, _ component.Host) error {
-	nr.logger.Info("NetFlow receiver is starting...")
-
 	// The function that will decode packets
 	decodeFunc, err := nr.buildDecodeFunc()
 	if err != nil {
 		return err
 	}
 
-	nr.logger.Info("Start listening over UDP", zap.String("scheme", nr.config.Scheme), zap.Int("port", nr.config.Port))
+	nr.logger.Info("Starting UDP listener", zap.String("scheme", nr.config.Scheme), zap.Int("port", nr.config.Port))
 	if err := nr.udpReceiver.Start(nr.config.Hostname, nr.config.Port, decodeFunc); err != nil {
 		return err
 	}
@@ -83,7 +80,6 @@ func (nr *netflowReceiver) Start(_ context.Context, _ component.Host) error {
 }
 
 func (nr *netflowReceiver) Shutdown(context.Context) error {
-	nr.logger.Info("NetFlow receiver is shutting down...")
 	if nr.udpReceiver == nil {
 		return nil
 	}
@@ -118,7 +114,6 @@ func (nr *netflowReceiver) buildDecodeFunc() (utils.DecoderFunc, error) {
 		Producer: otelLogsProducer,
 	}
 
-	var decodeFunc utils.DecoderFunc
 	var p utils.FlowPipe
 	switch nr.config.Scheme {
 	case "sflow":
@@ -128,13 +123,7 @@ func (nr *netflowReceiver) buildDecodeFunc() (utils.DecoderFunc, error) {
 	default:
 		return nil, fmt.Errorf("scheme does not exist: %s", nr.config.Scheme)
 	}
-
-	decodeFunc = p.DecodeFlow
-
-	// We wrap panics while decoding the message to handle them later
-	decodeFunc = debug.PanicDecoderWrapper(decodeFunc)
-
-	return decodeFunc, nil
+	return p.DecodeFlow, nil
 }
 
 // handleErrors handles errors from the listener
@@ -147,7 +136,7 @@ func (nr *netflowReceiver) handleErrors() {
 			nr.logger.Info("UDP receiver closed, exiting error handler")
 			return
 
-		case !errors.Is(err, netflow.ErrorTemplateNotFound) && !errors.Is(err, debug.PanicError):
+		case !errors.Is(err, netflow.ErrorTemplateNotFound) && !errors.Is(err, ErrorProducerProcessing):
 			nr.logger.Error("received a generic error while processing a flow message via GoFlow2 for the netflow receiver", zap.Error(err))
 			continue
 
@@ -155,13 +144,8 @@ func (nr *netflowReceiver) handleErrors() {
 			nr.logger.Warn("we could not find a template for a flow message, this error is expected from time to time until the device sends a template", zap.Error(err))
 			continue
 
-		case errors.Is(err, debug.PanicError):
-			var pErrMsg *debug.PanicErrorMessage
-			if errors.As(err, &pErrMsg) {
-				nr.logger.Error("unexpected error found decoding a flow message via GoFlow2 for the netflow receiver", zap.Any("error", pErrMsg.Msg))
-			} else {
-				nr.logger.Error("could not process a flow message, received an error from GoFlow2, this is a netflow receiver error", zap.Error(err))
-			}
+		case errors.Is(err, ErrorProducerProcessing):
+			nr.logger.Error("unexpected error processing the message", zap.Error(err))
 			continue
 		}
 	}
