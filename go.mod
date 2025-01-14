@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	github.com/netsampler/goflow2/v2 v2.2.1
+	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/netflowreceiver v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.10.0
 	go.opentelemetry.io/collector/component v0.117.0
 	go.opentelemetry.io/collector/component/componenttest v0.117.0
@@ -14,6 +15,7 @@ require (
 	go.opentelemetry.io/collector/receiver v0.117.0
 	go.opentelemetry.io/collector/receiver/receivertest v0.117.0
 	go.opentelemetry.io/collector/semconv v0.117.0
+	go.uber.org/goleak v1.3.0
 	go.uber.org/zap v1.27.0
 )
 
